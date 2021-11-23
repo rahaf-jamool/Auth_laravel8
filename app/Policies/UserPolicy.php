@@ -5,12 +5,12 @@ namespace App\Policies;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
-
+use App\Traits\GlobalTrait;
 
 class UserPolicy
 {
     use HandlesAuthorization;
-
+    use GlobalTrait;
     /**
      * Determine whether the user can view any models.
      *

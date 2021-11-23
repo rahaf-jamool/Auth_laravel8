@@ -2,14 +2,14 @@
 
 namespace App\Policies;
 
-use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\GlobalTrait;
 
 class PermissionPolicy
 {
     use HandlesAuthorization;
-
+    use GlobalTrait;
     /**
      * Determine whether the user can view any models.
      *

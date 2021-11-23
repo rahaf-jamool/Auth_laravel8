@@ -3,31 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-// use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\support\Facades\Auth;
+// use Illuminate\support\Facades\Auth;
 
-// use App\Traits\GlobalTrait;
-// use Illuminate\Support\Facades\Gate;
+use App\Traits\GlobalTrait;
+use Illuminate\Support\Facades\Gate;
 
 class UsersController extends Controller
 {   
-    // use GlobalTrait;
+    use GlobalTrait;
 
     public function __construct(User $user){
         $this->user = $user;
-        // $this->middleware('can:user-list')->only('getAllUsers,getByIdUser');
-        // $this->middleware('can:user-create')->only('createUser');
-        // $this->middleware('can:user-edit')->only('updateUser');
-        // $this->middleware('can:user-delete')->only('deleteUser');
+        $this->middleware('can:user-list')->only('getAllUsers,getByIdUser');
+        $this->middleware('can:user-create')->only('createUser');
+        $this->middleware('can:user-edit')->only('updateUser');
+        $this->middleware('can:user-delete')->only('deleteUser');
     }
 
-    public function getAllUsers()
+    public function getAllUsers(User $user)
     {
         try {
-            // Gate::authorize('user-list',$user);
+            Gate::authorize('user-list',$user);
             $user_id = User::latest()->get();
             $users= User::find($user_id);
             $users = User::with('roles')->get();
@@ -55,10 +54,10 @@ class UsersController extends Controller
             ], 401);
         }
     }
-    public function getByIdUser($id)
+    public function getByIdUser($id,User $user)
     {
         try {
-            // Gate::authorize('user-list',$user);
+            Gate::authorize('user-list',$user);
             $user = User::findOrFail($id);
             if (isset($user)) {
                 return response([
@@ -82,10 +81,10 @@ class UsersController extends Controller
             ], 401);
         }
     }
-    public function createUser(Request $request)
+    public function createUser(Request $request,User $user)
     {
         try {
-            // Gate::authorize('user-create',$user);
+            Gate::authorize('user-create',$user);
             $validator = Validator::make($request->all(),[
                 'fullName' => 'required|string',
                 'email' => 'required|email|unique:users',
@@ -134,7 +133,7 @@ class UsersController extends Controller
     public function updateUser(Request $request, User $user, $id)
     {
         try {
-            // Gate::authorize('user-edit',$user);
+            Gate::authorize('user-edit',$user);
             $user = User::find($id);
             if (isset($user)) {
                 $validator = Validator::make($request->all(),[
@@ -187,9 +186,9 @@ class UsersController extends Controller
         }
     }
     
-    public function deleteUser($id){
+    public function deleteUser($id,User $user){
         try {
-            // Gate::authorize('user-delete',$user);
+            Gate::authorize('user-delete',$user);
             $user = User::find($id);
             if (isset($user)) {
                 $user = User::destroy($id);
@@ -213,10 +212,5 @@ class UsersController extends Controller
             ],401);
         }
     } 
-    public function index(User $user){
-        $roles= $user->with('permissions')->get();
-        // $permission = $roles->with('permissions')->get();
-        return $roles;
-    }
 }
 

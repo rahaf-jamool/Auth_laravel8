@@ -4,13 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
-
+use App\Models\User;
+use App\Traits\GlobalTrait;
+use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller
 {
-    public function getAllPosts()
+    use GlobalTrait;
+
+    public function __construct(Post $post,User $user){
+        $this->post = $post;
+        $this->user = $user;
+        $this->middleware('can:post-list')->only('getAllPosts,getByIdPost');
+        $this->middleware('can:post-create')->only('createPost');
+        $this->middleware('can:post-edit')->only('updatePost');
+        $this->middleware('can:post-delete')->only('deletePost');
+    }
+
+    public function getAllPosts(User $user)
     {
         try {
+            Gate::authorize('post-list',$user);
             $posts = Post::all();
             if (count($posts) > 0) {
                 return response([
@@ -35,9 +49,10 @@ class PostController extends Controller
             ], 400);
         }
     }
-    public function getByIdPost($id)
+    public function getByIdPost($id,User $user)
     {
         try {
+            Gate::authorize('post-list',$user);
             $post = Post::find($id);
             if (isset($post)) {
                 return response([
@@ -61,9 +76,10 @@ class PostController extends Controller
             ], 400);
         }
     }
-    public function createPost()
+    public function createPost(User $user)
     {
         try {
+            Gate::authorize('post-create',$user);
             $title = request()->title;
             $body = request()->body;
             $user_id = request()->user_id;
@@ -86,9 +102,10 @@ class PostController extends Controller
             ], 400);
         }
     }
-    public function updatePost(Request $request, $id)
+    public function updatePost(Request $request, $id,User $user)
     {
         try {
+            Gate::authorize('post-edit',$user);
             $post = Post::find($id);
             if (isset($post)) {
                 $post->update($request->all());
@@ -113,9 +130,10 @@ class PostController extends Controller
             ], 400);
         }
     }
-    public function deletePost($id)
+    public function deletePost($id,User $user)
     {
         try {
+            Gate::authorize('post-delete',$user);
             $post = Post::find($id);
             if (isset($post)) {
                 $post = Post::destroy($id);

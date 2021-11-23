@@ -4,16 +4,26 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Permission;
+use App\Models\User;
+use App\Traits\GlobalTrait;
+use Illuminate\Support\Facades\Gate;
 
 class PermissionController extends Controller
 {
-    public function __construct(Permission $permission){
+    use GlobalTrait;
+
+    public function __construct(Permission $permission,User $user){
         $this->permission = $permission;
-        // $this->middleware('auth');
+        $this->user = $user;
+        $this->middleware('can:permission-list')->only('getAllPermission,getByIdPermission');
+        $this->middleware('can:permission-create')->only('createPermission');
+        $this->middleware('can:permission-edit')->only('updatePermission');
+        $this->middleware('can:permission-delete')->only('deletePermission');
     }
-    public function getAllPermission()
+    public function getAllPermission(User $user)
     {
         try {
+            Gate::authorize('permission-list',$user);
             $permission = Permission::all();
             if (count($permission) > 0) {
                 return response([
@@ -39,9 +49,10 @@ class PermissionController extends Controller
             ], 400);
         }
     }
-    public function getByIdPermission($id)
+    public function getByIdPermission($id,User $user)
     {
         try {
+            Gate::authorize('permission-list',$user);
             $permission = Permission::find($id);
             if (isset($permission)) {
                 return response([
@@ -66,9 +77,10 @@ class PermissionController extends Controller
             ], 400);
         }
     }
-    public function createPermission(Request $request)
+    public function createPermission(Request $request,User $user)
     {
         try {
+            Gate::authorize('permission-create',$user);
             $this->validate($request, [
                 'name' => 'required|max:50',
             ]);
@@ -90,9 +102,10 @@ class PermissionController extends Controller
             ], 400);
         }
     }
-    public function updatePermission($id,Request $request)
+    public function updatePermission($id,Request $request,User $user)
     {
         try {
+            Gate::authorize('permission-edit',$user);
             $permission = Permission::find($id);
             if (isset($permission)) {
                 $permission = new Permission;
@@ -119,9 +132,10 @@ class PermissionController extends Controller
             ], 400);
         }
     }
-    public function deletePermission($id)
+    public function deletePermission($id,User $user)
     {
         try {
+            Gate::authorize('permission-delete',$user);
             Permission::where('id', $id)->delete();
             return response([
                 'status' => true,

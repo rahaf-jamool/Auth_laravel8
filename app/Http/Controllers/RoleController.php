@@ -15,10 +15,10 @@ class RoleController extends Controller
     public function __construct(Role $role,User $user){
         $this->role = $role;
         $this->user = $user;
-        // $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
-        // $this->middleware('can:role-create')->only('createRole');
-        // $this->middleware('can:role-edit')->only('updateRole');
-        // $this->middleware('can:role-delete')->only('deleteRole');
+        $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
+        $this->middleware('can:role-create')->only('createRole');
+        $this->middleware('can:role-edit')->only('updateRole');
+        $this->middleware('can:role-delete')->only('deleteRole');
     }
 
     public function getAllRoles(User $user)
@@ -83,7 +83,7 @@ class RoleController extends Controller
     public function createRole(Request $request,User $user)
     {
         try {
-            // Gate::authorize('role-create',$user);
+            Gate::authorize('role-create',$user);
             $validator = Validator::make($request->all(),[
                 'name' => 'required|string|unique:roles',
                 'permissions' => 'required'
