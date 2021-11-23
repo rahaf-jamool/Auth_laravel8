@@ -19,8 +19,8 @@ class UserPolicy
      */
     public function viewAny(User $user)
     {
-        // return $this->author('user-list',$user);
-        return true;
+        return $this->author('user-list',$user);
+        // return true;
     }
 
     /**
@@ -32,8 +32,8 @@ class UserPolicy
      */
     public function view(User $user)
     {
-        // return $this->author('user-list',$user);
-        return true;
+        return $this->author('user-list',$user);
+        // return true;
     }
 
     /**
@@ -44,8 +44,8 @@ class UserPolicy
      */
     public function create(User $user)
     {
-        // return $this->author('user-create',$user);
-        return true;
+        return $this->author('user-create',$user);
+        // return true;
     }
 
     /**
@@ -57,8 +57,8 @@ class UserPolicy
      */
     public function update(User $user)
     {
-        // return $this->author('user-edit',$user);
-        return true;
+        return $this->author('user-edit',$user);
+        // return true;
     }
 
     /**
@@ -70,8 +70,8 @@ class UserPolicy
      */
     public function delete(User $user)
     {
-        // return $this->author('user-delete',$user);
-        return true;
+        return $this->author('user-delete',$user);
+        // return true;
     }
 
     /**
@@ -83,8 +83,8 @@ class UserPolicy
      */
     public function restore(User $user)
     {
-        // return $this->author('user-delete',$user);
-        return true;
+        return $this->author('user-delete',$user);
+        // return true;
     }
 
     /**
@@ -96,7 +96,7 @@ class UserPolicy
      */
     public function forceDelete(User $user)
     {
-        // return $this->author('user-delete',$user);
-        return true;
+        return $this->author('user-delete',$user);
+        // return true;
     }
 }

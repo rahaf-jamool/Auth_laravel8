@@ -15,6 +15,8 @@ use App\Http\Controllers\PostController;
 */
 
 // Route::prefix('auth')->middleware([AdminCheck::class])->group(function () {
+Route::get('/index','App\Http\Controllers\usersController@index');
+
 Route::group([
     'middleware' => 'api',
     'namespace' => 'App\Http\Controllers',

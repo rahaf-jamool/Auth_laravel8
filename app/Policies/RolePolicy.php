@@ -2,14 +2,15 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
+// use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\GlobalTrait;
 
 class RolePolicy
 {
     use HandlesAuthorization;
-
+    use GlobalTrait;
     /**
      * Determine whether the user can view any models.
      *
@@ -18,8 +19,10 @@ class RolePolicy
      */
     public function viewAny(User $user)
     {
-        // return $this->author('role-list',$user);
-        return $user->roles()->pluck('role_id')->first();
+        
+        return $this->author('role-list',$user);
+        // if ($user->permission()->)
+        // return $user->roles()->pluck('role_id')->first();
         // return true;
     }
 
@@ -32,9 +35,9 @@ class RolePolicy
      */
     public function view(User $user)
     {
-        // return $this->author('role-list',$user);
+        return $this->author('role-list',$user);
         // return true;
-        return $user->roles()->pluck('role_id')->first();
+        // return $user->roles()->pluck('role_id')->first();
     }
 
     /**
@@ -45,8 +48,8 @@ class RolePolicy
      */
     public function create(User $user)
     {
-        // return $this->author('role-create',$user);
-        return true;
+        return $this->author('role-create',$user);
+        // return true;
     }
 
     /**
@@ -58,8 +61,8 @@ class RolePolicy
      */
     public function update(User $user)
     {
-        // return $this->author('role-edit',$user);
-        return true;
+        return $this->author('role-edit',$user);
+        // return true;
     }
 
     /**
@@ -71,8 +74,8 @@ class RolePolicy
      */
     public function delete(User $user)
     {
-        // return $this->author('role-delete',$user);
-        return true;
+        return $this->author('role-delete',$user);
+        // return true;
     }
 
     /**
@@ -84,8 +87,8 @@ class RolePolicy
      */
     public function restore(User $user)
     {
-        // return $this->author('role-delete',$user);
-        return true;
+        return $this->author('role-delete',$user);
+        // return true;
     }
 
     /**
@@ -97,7 +100,7 @@ class RolePolicy
      */
     public function forceDelete(User $user)
     {
-        // return $this->author('role-delete',$user);
-        return true;
+        return $this->author('role-delete',$user);
+        // return true;
     }
 }

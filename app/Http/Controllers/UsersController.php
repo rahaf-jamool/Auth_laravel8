@@ -3,21 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;
+// use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Facades\JWTFactory;
+use Illuminate\support\Facades\Auth;
+
+// use App\Traits\GlobalTrait;
+// use Illuminate\Support\Facades\Gate;
 
 class UsersController extends Controller
-{
+{   
+    // use GlobalTrait;
+
     public function __construct(User $user){
         $this->user = $user;
+        // $this->middleware('can:user-list')->only('getAllUsers,getByIdUser');
+        // $this->middleware('can:user-create')->only('createUser');
+        // $this->middleware('can:user-edit')->only('updateUser');
+        // $this->middleware('can:user-delete')->only('deleteUser');
     }
 
     public function getAllUsers()
     {
         try {
+            // Gate::authorize('user-list',$user);
             $user_id = User::latest()->get();
             $users= User::find($user_id);
             $users = User::with('roles')->get();
@@ -48,6 +58,7 @@ class UsersController extends Controller
     public function getByIdUser($id)
     {
         try {
+            // Gate::authorize('user-list',$user);
             $user = User::findOrFail($id);
             if (isset($user)) {
                 return response([
@@ -74,6 +85,7 @@ class UsersController extends Controller
     public function createUser(Request $request)
     {
         try {
+            // Gate::authorize('user-create',$user);
             $validator = Validator::make($request->all(),[
                 'fullName' => 'required|string',
                 'email' => 'required|email|unique:users',
@@ -122,6 +134,7 @@ class UsersController extends Controller
     public function updateUser(Request $request, User $user, $id)
     {
         try {
+            // Gate::authorize('user-edit',$user);
             $user = User::find($id);
             if (isset($user)) {
                 $validator = Validator::make($request->all(),[
@@ -176,6 +189,7 @@ class UsersController extends Controller
     
     public function deleteUser($id){
         try {
+            // Gate::authorize('user-delete',$user);
             $user = User::find($id);
             if (isset($user)) {
                 $user = User::destroy($id);
@@ -198,6 +212,11 @@ class UsersController extends Controller
                 'message' => 'Error! Users doesnt exist yet'
             ],401);
         }
+    } 
+    public function index(User $user){
+        $roles= $user->with('permissions')->get();
+        // $permission = $roles->with('permissions')->get();
+        return $roles;
     }
 }
 

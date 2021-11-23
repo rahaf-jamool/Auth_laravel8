@@ -5,17 +5,26 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Role;
-
-
+use App\Models\User;
+use App\Traits\GlobalTrait;
+use Illuminate\Support\Facades\Gate;
 class RoleController extends Controller
-{
-    public function __construct(Role $role){
+{ 
+    use GlobalTrait;
+
+    public function __construct(Role $role,User $user){
         $this->role = $role;
+        $this->user = $user;
+        // $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
+        // $this->middleware('can:role-create')->only('createRole');
+        // $this->middleware('can:role-edit')->only('updateRole');
+        // $this->middleware('can:role-delete')->only('deleteRole');
     }
 
-    public function getAllRoles()
+    public function getAllRoles(User $user)
     {
         try {
+            Gate::authorize('role-list',$user);
             $role_id = Role::all();
             $roles= Role::find($role_id);
             $roles = Role::with('permissions')->get();
@@ -43,9 +52,10 @@ class RoleController extends Controller
             ], 400);
         }
     }
-    public function getByIdRole($id)
+    public function getByIdRole($id,User $user)
     {
         try {
+            Gate::authorize('role-list',$user);
             $role = Role::find($id);
             if (isset($role)) {
                 return response([
@@ -70,9 +80,10 @@ class RoleController extends Controller
             ], 400);
         }
     }
-    public function createRole(Request $request)
+    public function createRole(Request $request,User $user)
     {
         try {
+            // Gate::authorize('role-create',$user);
             $validator = Validator::make($request->all(),[
                 'name' => 'required|string|unique:roles',
                 'permissions' => 'required'
@@ -106,10 +117,10 @@ class RoleController extends Controller
             ], 400);
         }
     }
-    public function updateRole($id,Request $request)
+    public function updateRole($id,Request $request,User $user)
     {
         try {
-            // $role = Role::findOrFail($id);
+            Gate::authorize('role-edit',$user);
             $role = Role::where('id', '=', $id)->first();
             if (isset($role)) {
                 $validator = Validator::make($request->all(),[
@@ -148,7 +159,7 @@ class RoleController extends Controller
             ], 400);
         }
     }
-    public function deleteRole(){
-        
+    public function deleteRole(User $user){
+        Gate::authorize('role-delete',$user);
     }
 }
