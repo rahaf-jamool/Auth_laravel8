@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\PostRequest;
 
 class PostController extends Controller
 {
@@ -27,26 +27,12 @@ class PostController extends Controller
             Gate::authorize('post-list',$user);
             $posts = Post::all();
             if (count($posts) > 0) {
-                return response([
-                    'Posts' => $posts,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Posts',$posts,'done');
             } else {
-                return response([
-                    'Posts' => $posts,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Posts not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('Post','Post doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Posts doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function getByIdPost($id,User $user)
@@ -55,79 +41,40 @@ class PostController extends Controller
             Gate::authorize('post-list',$user);
             $post = Post::find($id);
             if (isset($post)) {
-                return response([
-                    'Post' => $post,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Post',$post,'done');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Posts not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Posts doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function createPost(User $user)
+    public function createPost(PostRequest $request,User $user)
     {
         try {
             Gate::authorize('post-create',$user);
-            $title = request()->title;
-            $body = request()->body;
-            $user_id = request()->user_id;
-            $post = new Post;
-            $post->title = $title;
-            $post->body = $body;
-            $post->user_id = $user_id;
-            $post->save();
-            return response([
-                'Post' => $post,
-                'status' => true,
-                'stateNum' => 200,
-                'message' => 'done'
-            ], 200);
+            $post = Post::create(array_merge(
+                $request->validated(),
+            ));
+            return $response= $this->returnData('Post',$post,'done');
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Posts doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function updatePost(Request $request, $id,User $user)
+    public function updatePost(PostRequest $request, $id,User $user)
     {
         try {
             Gate::authorize('post-edit',$user);
             $post = Post::find($id);
             if (isset($post)) {
+                $request->validated();
                 $post->update($request->all());
-                return response([
-                    'Post' => $post,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Post',$post,'done');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Posts not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Posts doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function deletePost($id,User $user)
@@ -137,24 +84,12 @@ class PostController extends Controller
             $post = Post::find($id);
             if (isset($post)) {
                 $post = Post::destroy($id);
-                return response([
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $this->returnData('Post', $user,'This Post Is deleted Now');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Posts not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Posts doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
 }

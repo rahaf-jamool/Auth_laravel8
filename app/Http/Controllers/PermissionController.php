@@ -7,6 +7,7 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\PermissionRequest;
 
 class PermissionController extends Controller
 {
@@ -24,29 +25,15 @@ class PermissionController extends Controller
     {
         try {
             Gate::authorize('permission-list',$user);
-            $permission = Permission::all();
-            if (count($permission) > 0) {
-                return response([
-                    'Permission' => $permission,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+            $permissions = Permission::all();
+            if (count($permissions) > 0) {
+                return $response= $this->returnData('Permission',$permissions,'done');
             } else {
-                return response([
-                    'permission' => $permission,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Permission not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
             return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Permission doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function getByIdPermission($id,User $user)
@@ -55,99 +42,55 @@ class PermissionController extends Controller
             Gate::authorize('permission-list',$user);
             $permission = Permission::find($id);
             if (isset($permission)) {
-                return response([
-                    'Permission' => $permission,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Permission',$permission,'done');
             } else {
-                return response([
-                    'Permission' => $permission,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This Permission not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Permission doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function createPermission(Request $request,User $user)
+    public function createPermission(PermissionRequest $request,User $user)
     {
         try {
             Gate::authorize('permission-create',$user);
-            $this->validate($request, [
-                'name' => 'required|max:50',
-            ]);
 
-            $permission = $this->permission->create([
-                'name' => $request->name
-            ]);
-            return response([
-                'Permission' => $permission,
-                'status' => true,
-                'stateNum' => 200,
-                'message' => 'done'
-            ], 200);
+            $permission = Permission::create(array_merge(
+                $request->validated(),
+            ));
+            return $response= $this->returnData('Permission',$permission,'done');
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Permission doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function updatePermission($id,Request $request,User $user)
+    public function updatePermission($id,PermissionRequest $request,User $user)
     {
         try {
             Gate::authorize('permission-edit',$user);
             $permission = Permission::find($id);
             if (isset($permission)) {
-                $permission = new Permission;
-                $permission->name = $request->name;
-                $permission->save();
-                return response([
-                    'Permission' => $permission,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                $request->validated();
+                $permission->update($request->all());
+                return $response= $this->returnData('Permission',$permission,'done');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This Permission not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Permission doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function deletePermission($id,User $user)
     {
         try {
             Gate::authorize('permission-delete',$user);
-            Permission::where('id', $id)->delete();
-            return response([
-                'status' => true,
-                'stateNum' => 200,
-                'message' => 'done'
-            ], 200);
+            $permission = Permission::find($id);
+            if (isset($permission)) {
+                return $this->returnData('Permission', $permission,'This Permission Is deleted Now');
+            } else {
+                return $response= $this->returnSuccessMessage('This Permission not found','done');
+            }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Permission doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
 }

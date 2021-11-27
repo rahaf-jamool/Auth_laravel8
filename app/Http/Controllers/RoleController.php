@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Role;
 use App\Models\User;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\RoleRequest;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 class RoleController extends Controller
 { 
     use GlobalTrait;
@@ -15,86 +15,55 @@ class RoleController extends Controller
     public function __construct(Role $role,User $user){
         $this->role = $role;
         $this->user = $user;
-        $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
+        // $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
         $this->middleware('can:role-create')->only('createRole');
         $this->middleware('can:role-edit')->only('updateRole');
         $this->middleware('can:role-delete')->only('deleteRole');
     }
 
-    public function getAllRoles(User $user)
+    public function getAllRoles()
     {
         try {
-            Gate::authorize('role-list',$user);
+            // Gate::authorize('role-list',$user);
             $role_id = Role::all();
             $roles= Role::find($role_id);
             $roles = Role::with('permissions')->get();
             if (count($roles) > 0) {
-                return response([
-                    'Roles' => $roles,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Roles',$roles,'done');
             } else {
-                return response([
-                    'Roles' => $roles,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'Roles doesnt exist yet'
-                ], 401);
+                return $response= $this->returnSuccessMessage('Role','Role doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Roles doesnt exist yet'
-            ], 400);
+            if($ex instanceof AuthorizationException) {
+                return 'error unuothorize';
+            }
+            if ($ex instanceof AuthenticationException) {
+                return $this->returnError('400', 'error');
+            }
+            // return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function getByIdRole($id,User $user)
+    public function getByIdRole($id)
     {
         try {
-            Gate::authorize('role-list',$user);
+            // Gate::authorize('role-list',$user);
             $role = Role::find($id);
             if (isset($role)) {
-                return response([
-                    'role' => $role,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Role',$role,'done');
             } else {
-                return response([
-                    'Role' => $role,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This Role not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This Role not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Roles doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function createRole(Request $request,User $user)
+    public function createRole(RoleRequest $request,User $user)
     {
         try {
             Gate::authorize('role-create',$user);
-            $validator = Validator::make($request->all(),[
-                'name' => 'required|string|unique:roles',
-                'permissions' => 'required'
-            ]);
-
-            if($validator->fails()){
-                return response()->json($validator->errors(),422);
-            }
 
             $role_id = Role::create(array_merge(
-                $validator->validated(),
+                $request->validated(),
             ));
             $id=$role_id->id;
 
@@ -102,64 +71,43 @@ class RoleController extends Controller
                $role= Role::find($id);
                 $role->permissions()->syncWithoutDetaching($request->get('permissions'));
             }
-            return response([
-                'Role' => $role,
-                'status' => true,
-                'stateNum' => 200,
-                'message' => 'done'
-            ], 200);
+                return $response= $this->returnData('Role',$role,'done');
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Roles doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function updateRole($id,Request $request,User $user)
+    public function updateRole($id,RoleRequest $request,User $user)
     {
         try {
             Gate::authorize('role-edit',$user);
             $role = Role::where('id', '=', $id)->first();
             if (isset($role)) {
-                $validator = Validator::make($request->all(),[
-                    'name' => 'required|string|unique:roles',
-                    'permissions' => 'required'
-                ]);
-    
-                if($validator->fails()){
-                    return response()->json($validator->errors(),422);
-                }
+                $request->validated();
                 $role->update($request->all());
                 if($request->has('permissions')){
                    $role= Role::find($id);
                     $role->permissions()->syncWithoutDetaching($request->get('permissions'));
                 }
-                return response([
-                    'Role' => $role,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Role',$role,'done');
             } else {
-                return response([
-                    'Role' => $role,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This Role not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This Role not found','done');
             }
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error! Roles doesnt exist yet'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function deleteRole(User $user){
-        Gate::authorize('role-delete',$user);
+    public function deleteRole($id,User $user){
+        try {
+            Gate::authorize('role-delete',$user);
+            $role = Role::find($id);
+            if (isset($user)) {
+                $role = Role::destroy($id);
+                return $this->returnData('Role', $role,'This Role Is deleted Now');
+            } else {
+                return $response= $this->returnSuccessMessage('This Role not found','done');
+            }
+        } catch (\Exception $ex) {
+            return $this->returnError('400', $ex->getMessage());
+        }
     }
 }

@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-// use Illuminate\support\Facades\Auth;
-
+use App\Http\Requests\UserRequest;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
 
@@ -31,27 +28,12 @@ class UsersController extends Controller
             $users= User::find($user_id);
             $users = User::with('roles')->get();
             if (count($users) > 0) {
-                return response()->json([
-                    'Users' => $users,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Users',$users,'done');
             } else {
-                return response([
-                    'Users' => $users,
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This User not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('User','User doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 401,
-                'message' => 'Error! Users doesnt exist yet'
-            ], 401);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function getByIdUser($id,User $user)
@@ -60,45 +42,20 @@ class UsersController extends Controller
             Gate::authorize('user-list',$user);
             $user = User::findOrFail($id);
             if (isset($user)) {
-                return response([
-                    'User' => $user,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                return $response= $this->returnData('Role',$user,'done');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This User not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 401,
-                'message' => 'Error! Users doesnt exist yet'
-            ], 401);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function createUser(Request $request,User $user)
+    public function createUser(UserRequest $request,User $user)
     {
         try {
             Gate::authorize('user-create',$user);
-            $validator = Validator::make($request->all(),[
-                'fullName' => 'required|string',
-                'email' => 'required|email|unique:users',
-                'password' => 'alpha_num|bail|string|confirmed|required|min:8',
-                'roles' => 'required',
-                'permissions' => 'required'
-            ]);
-
-            if($validator->fails()){
-                return response()->json($validator->errors(),422);
-            }
-
             $user = User::create(array_merge(
-                $validator->validated(),
+                $request->validated(),
                 ['password'=> bcrypt($request->password)]
             ));
              $id=$user->id;
@@ -109,48 +66,27 @@ class UsersController extends Controller
                 $role->roles()->syncWithoutDetaching($request->get('roles'));
             }
             
-           if ($request->has('permissions')) {
-               $permissions = User::find($id);
-               $permissions->permissions()->syncWithoutDetaching($request->get('permissions'));
-           }
-            return response([
-                'User' => [$token,$user],
-                'status' => true,
-                'stateNum' => 200,
-                'message' => 'done'
-            ], 200);
+        //    if ($request->has('permissions')) {
+        //        $permissions = User::find($id);
+        //        $permissions->permissions()->syncWithoutDetaching($request->get('permissions'));
+        //    }
+           return $response= $this->returnData('User',[$token,$user],'done');
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 401,
-                'message' => 'Error! Users doesnt exist yet'
-            ], 401);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     
     // check
-    public function updateUser(Request $request, User $user, $id)
+    public function updateUser(UserRequest $request, User $user, $id)
     {
         try {
             Gate::authorize('user-edit',$user);
             $user = User::find($id);
             if (isset($user)) {
-                $validator = Validator::make($request->all(),[
-                    'fullName' => 'required|string',
-                    'email' => 'required|email|unique:users',
-                    'password' => 'alpha_num|bail|string|confirmed|required|min:8',
-                    'roles' => 'required',
-                    'permissions' => 'required'
-                ]);
 
-                if($validator->fails()){
-                    return response()->json($validator->errors(),422);
-                }
                 $token = JWTAuth::fromUser($user);
-
+                $request->validated();
                 $user->update($request->all());
-                // $user_id=$user->id;
 
                 if($request->has('password')){
                     $user->password = bcrypt($request->password);
@@ -161,28 +97,16 @@ class UsersController extends Controller
                     $role->roles()->syncWithoutDetaching($request->get('roles'));
                 }
             
-                if ($request->has('permissions')) {
-                    $permissions = User::find($user->id);
-                    $permissions->permissions()->syncWithoutDetaching($request->get('permissions'));
-                }    
-                return response([
-                    'User' => [$user,$token],
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+                // if ($request->has('permissions')) {
+                //     $permissions = User::find($user->id);
+                //     $permissions->permissions()->syncWithoutDetaching($request->get('permissions'));
+                // }    
+                return $response= $this->returnData('User',[$user,$token],'done');
             } else {
-                return response([
-                    'message' => 'This User not found'
-                ], 401);
+                return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 401,
-                'message' => 'Error! Users doesnt exist yet'
-            ], 401);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     
@@ -192,24 +116,12 @@ class UsersController extends Controller
             $user = User::find($id);
             if (isset($user)) {
                 $user = User::destroy($id);
-                return response([
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ],200);
+                return $this->returnData('User', $user,'This User Is deleted Now');
             } else {
-                return response([
-                    'status' => true,
-                    'stateNum' => 401,
-                    'message' => 'This User not found'
-                ],401);
+                return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return response([
-                'status' => false,
-                'stateNum' => 401,
-                'message' => 'Error! Users doesnt exist yet'
-            ],401);
+            return $this->returnError('400', $ex->getMessage());
         }
     } 
 }

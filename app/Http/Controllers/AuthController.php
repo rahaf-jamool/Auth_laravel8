@@ -3,50 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Requests\AuthRequest;
 use Illuminate\support\Facades\Auth;
+use App\Traits\GlobalTrait;
+// use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Request;
+// use Illuminate\support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    use GlobalTrait;
     public function __construct(){
         $this->middleware('auth:api',['except' => ['login','register']]);
     }
     protected function guard(){
         return Auth::guard();
     }
-    public function register(Request $request)
+    public function register(AuthRequest $request)
     {
         try {
-            $validator = Validator::make($request->all(),[
-                'fullName' => 'required|string',
-                'email' => 'required|email|unique:users',
-                'password' => 'alpha_num|bail|string|confirmed|required|min:8',
-                // 'role' => 'required',
-                // 'permissions' => 'required'
-            ]);
-
-            if($validator->fails()){
-                return response()->json($validator->errors(),422);
-            }
-
             $user = User::create(array_merge(
-                $validator->validated(),
+                $request->validated(),
                 ['password'=> bcrypt($request->password)]
             ));
-            return response([
-                    'User' => $user,
-                    'status' => true,
-                    'stateNum' => 200,
-                    'message' => 'done'
-                ], 200);
+            $id=$user->id;
+            $token = JWTAuth::fromUser($user);
+            
+            if ($request->has('roles')) {
+                $role = User::find($id);
+                $role->roles()->syncWithoutDetaching($request->get('roles'));
+            }
+            return $this->returnData('User', [$token,$user],'done');
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error Register'
-            ], 400);
+            return $this->returnError('400', $ex->getMessage());
         }
     }
     public function login(Request $request)
@@ -58,6 +49,7 @@ class AuthController extends Controller
             ]);
             if($validator->fails()){
                 return response()->json($validator->errors(),400);
+
             }
 
             $token_validity = 24 * 60;
@@ -68,16 +60,16 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Unauthorized'],401);
             }
             return $this->respondWithToken($token);
-        } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return response([
-                'status' => false,
-                'stateNum' => 400,
-                'message' => 'Error Login'
-            ], 400);
+        }catch(\Throwable $ex){
+                if ($ex instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException){
+                    return $this->returnError('401', 'TokenInvalidException');
+                }else if ($ex instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException){
+                    return $this->returnError('401', 'TokenInvalidException');
+                } else if ( $ex instanceof \Tymon\JWTAuth\Exceptions\JWTException) {
+                    return $this->returnError('401', $ex->getMessage());
+                }
         }
     }
-    
     protected function respondWithToken($token){
         return response()->json([
             'token' => $token,
@@ -86,12 +78,20 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        $this->guard()->logout();
-        return response([
-            'message' => 'Successfully logged out'
-        ]);
+        // return 'hi';
+        $token = $request -> token;
+        if($token){
+            try {
+                auth('api')->setToken($token)->invalidate(); //logout
+            }catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e){
+                return  $this -> returnError('','some thing went wrongs'.$e->getMessage());
+            }
+            return $this->returnSuccessMessage('Logged out successfully','200');
+        }else{
+            $this -> returnError('','some thing went wrongs');
+        }
     }
 
     public function profile(){
