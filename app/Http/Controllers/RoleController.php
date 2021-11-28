@@ -6,25 +6,22 @@ use App\Models\User;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\RoleRequest;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Auth\AuthenticationException;
 class RoleController extends Controller
 { 
     use GlobalTrait;
-
     public function __construct(Role $role,User $user){
         $this->role = $role;
         $this->user = $user;
-        // $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
+        $this->middleware('can:role-list')->only('getAllRoles,getByIdRole');
         $this->middleware('can:role-create')->only('createRole');
         $this->middleware('can:role-edit')->only('updateRole');
         $this->middleware('can:role-delete')->only('deleteRole');
     }
 
-    public function getAllRoles()
+    public function getAllRoles(User $user)
     {
         try {
-            // Gate::authorize('role-list',$user);
+            Gate::authorize('role-list',$user);
             $role_id = Role::all();
             $roles= Role::find($role_id);
             $roles = Role::with('permissions')->get();
@@ -34,19 +31,13 @@ class RoleController extends Controller
                 return $response= $this->returnSuccessMessage('Role','Role doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            if($ex instanceof AuthorizationException) {
-                return 'error unuothorize';
-            }
-            if ($ex instanceof AuthenticationException) {
-                return $this->returnError('400', 'error');
-            }
-            // return $this->returnError('400', $ex->getMessage());
+            return $this->returnError('400', $ex->getMessage());
         }
     }
-    public function getByIdRole($id)
+    public function getByIdRole($id,User $user)
     {
         try {
-            // Gate::authorize('role-list',$user);
+            Gate::authorize('role-list',$user);
             $role = Role::find($id);
             if (isset($role)) {
                 return $response= $this->returnData('Role',$role,'done');
@@ -61,7 +52,6 @@ class RoleController extends Controller
     {
         try {
             Gate::authorize('role-create',$user);
-
             $role_id = Role::create(array_merge(
                 $request->validated(),
             ));
@@ -72,8 +62,8 @@ class RoleController extends Controller
                 $role->permissions()->syncWithoutDetaching($request->get('permissions'));
             }
                 return $response= $this->returnData('Role',$role,'done');
-        } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+        }catch (\Exception $ex) {
+            return $this->returnError('403', $ex->getMessage());
         }
     }
     public function updateRole($id,RoleRequest $request,User $user)

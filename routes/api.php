@@ -35,8 +35,8 @@ Route::group([
     Route::put('user/update/{id}', 'UsersController@updateUser')->can('user-edit', User::class);
     Route::delete('user/delete/{id}','UsersControlle@deleteUser')->can('user-delete', User::class);
     // roles
-    Route::get('roles/getAll','RoleController@getAllRoles');
-    Route::get('role/getById/{id}', 'RoleController@getByIdRole');
+    Route::get('roles/getAll','RoleController@getAllRoles')->can('role-list', User::class);
+    Route::get('role/getById/{id}', 'RoleController@getByIdRole')->can('role-list', User::class);
     Route::post('role/create', 'RoleController@createRole')->can('role-create', User::class);
     Route::put('role/update/{id}', 'RoleController@updateRole')->can('role-edit', User::class);
     Route::delete('role/delete/{id}', 'RoleController@deleteRole')->can('role-delete', User::class);
