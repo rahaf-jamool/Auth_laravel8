@@ -8,7 +8,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Response;
-// use HttpException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -54,18 +53,14 @@ class Handler extends ExceptionHandler
                    });
                 }
                public function handleException( Throwable $e){
-                //    if ($e instanceof HttpException) {
-                //        $code = $e->getStatusCode();
-                //        $defaultMessage = \Symfony\Component\HttpFoundation\Response::$statusTexts[$code];
-                //        $message = $e->getMessage() == "" ? $defaultMessage : $e->getMessage();
-                //        return $this->errorResponse($message, $code);
-                //    }
                      if ($e instanceof ModelNotFoundException) {
                        $model = strtolower(class_basename($e->getModel()));
                        return $this->errorResponse("Does not exist any instance of {$model} with the given id", Response::HTTP_NOT_FOUND);
-                   } else if ($e instanceof AuthorizationException) {
-                       return $this->errorResponse($e->getMessage(), '403');
-                   } else if ($e instanceof TokenBlacklistedException) {
+                   } 
+                   else if ($e instanceof AuthorizationException) {
+                       return $this->errorResponse($e->getMessage(),$e->getCode(),Response::HTTP_FORBIDDEN);
+                   } 
+                else if ($e instanceof TokenBlacklistedException) {
                        return $this->errorResponse($e->getMessage(), Response::HTTP_UNAUTHORIZED);
                    } else if ($e instanceof AuthenticationException) {
                        return $this->errorResponse($e->getMessage(), Response::HTTP_UNAUTHORIZED);
@@ -87,7 +82,7 @@ class Handler extends ExceptionHandler
                    }
                    else {
                        if (config('app.debug'))
-                           return $this->dataResponse($e->getMessage());
+                           return $this->errorResponse($e->getMessage(),403);
                        else {
                            return $this->errorResponse('Try later', Response::HTTP_INTERNAL_SERVER_ERROR);
                        }

@@ -33,7 +33,7 @@ class UsersController extends Controller
                 return $response= $this->returnSuccessMessage('User','User doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function getByIdUser($id,User $user)
@@ -47,7 +47,7 @@ class UsersController extends Controller
                 return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function createUser(UserRequest $request,User $user)
@@ -72,7 +72,7 @@ class UsersController extends Controller
         //    }
            return $response= $this->returnData('User',[$token,$user],'done');
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     
@@ -106,7 +106,7 @@ class UsersController extends Controller
                 return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     
@@ -115,13 +115,13 @@ class UsersController extends Controller
             Gate::authorize('user-delete',$user);
             $user = User::find($id);
             if (isset($user)) {
-                $user = User::destroy($id);
+                $user->destroy();
                 return $this->returnData('User', $user,'This User Is deleted Now');
             } else {
                 return $response= $this->returnSuccessMessage('This User not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     } 
 }

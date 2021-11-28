@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Traits\GlobalTrait;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\RoleRequest;
+use App\Exceptions\Handler as handleException;
 class RoleController extends Controller
 { 
     use GlobalTrait;
@@ -31,7 +32,7 @@ class RoleController extends Controller
                 return $response= $this->returnSuccessMessage('Role','Role doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function getByIdRole($id,User $user)
@@ -45,7 +46,7 @@ class RoleController extends Controller
                 return $response= $this->returnSuccessMessage('This Role not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function createRole(RoleRequest $request,User $user)
@@ -63,7 +64,7 @@ class RoleController extends Controller
             }
                 return $response= $this->returnData('Role',$role,'done');
         }catch (\Exception $ex) {
-            return $this->returnError('403', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function updateRole($id,RoleRequest $request,User $user)
@@ -83,7 +84,7 @@ class RoleController extends Controller
                 return $response= $this->returnSuccessMessage('This Role not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function deleteRole($id,User $user){
@@ -97,7 +98,7 @@ class RoleController extends Controller
                 return $response= $this->returnSuccessMessage('This Role not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
 }

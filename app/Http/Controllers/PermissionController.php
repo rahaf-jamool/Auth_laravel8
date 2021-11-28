@@ -32,8 +32,7 @@ class PermissionController extends Controller
                 return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $ex->getMessage();
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function getByIdPermission($id,User $user)
@@ -47,7 +46,7 @@ class PermissionController extends Controller
                 return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function createPermission(PermissionRequest $request,User $user)
@@ -60,7 +59,7 @@ class PermissionController extends Controller
             ));
             return $response= $this->returnData('Permission',$permission,'done');
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function updatePermission($id,PermissionRequest $request,User $user)
@@ -76,7 +75,7 @@ class PermissionController extends Controller
                 return $response= $this->returnSuccessMessage('Permission','Permission doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function deletePermission($id,User $user)
@@ -85,12 +84,13 @@ class PermissionController extends Controller
             Gate::authorize('permission-delete',$user);
             $permission = Permission::find($id);
             if (isset($permission)) {
+                $permission = Permission::destroy($id);
                 return $this->returnData('Permission', $permission,'This Permission Is deleted Now');
             } else {
                 return $response= $this->returnSuccessMessage('This Permission not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
 }

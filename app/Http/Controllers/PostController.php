@@ -32,7 +32,7 @@ class PostController extends Controller
                 return $response= $this->returnSuccessMessage('Post','Post doesnt exist yet');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function getByIdPost($id,User $user)
@@ -46,7 +46,7 @@ class PostController extends Controller
                 return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function createPost(PostRequest $request,User $user)
@@ -58,7 +58,7 @@ class PostController extends Controller
             ));
             return $response= $this->returnData('Post',$post,'done');
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function updatePost(PostRequest $request, $id,User $user)
@@ -74,7 +74,7 @@ class PostController extends Controller
                 return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
     public function deletePost($id,User $user)
@@ -89,7 +89,7 @@ class PostController extends Controller
                 return $response= $this->returnSuccessMessage('This Post not found','done');
             }
         } catch (\Exception $ex) {
-            return $this->returnError('400', $ex->getMessage());
+            return $this->returnError($ex->getCode(), $ex->getMessage());
         }
     }
 }
